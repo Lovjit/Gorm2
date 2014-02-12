@@ -86,7 +86,7 @@ class UtilController {
     def property = {
         def dates = User.createCriteria().list() {
             projections {
-                property("age")
+                property("age", 'userage')
                 'account' {
                     property("dateCreated")
                 }
@@ -94,6 +94,7 @@ class UtilController {
             ilike("firstName", "Test%")
             le("age", 50)
             between("age", 18, 60)
+            order('userage', 'desc')
         }
         render "Result -> ${dates}"
     }
