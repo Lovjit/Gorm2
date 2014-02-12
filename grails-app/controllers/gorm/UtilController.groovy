@@ -7,20 +7,18 @@ class UtilController {
     def list = {
         List<User> users = User.createCriteria().list() {
             ilike("firstName", "Test%")
-//            le("age", 30)
-//            between("age", 18, 60)
+            le("age", 30)
+            between("age", 18, 60)
         }
         render "Result -> ${users.size()} ${users.firstName} ${users.age}"
     }
 
     def listPaginate = {
         List<User> users
-        LogSql.execute {
-            users = User.createCriteria().list(max: 10, offset: 10) {
-                ilike("firstName", "Test 1%")
-                le("age", 50)
-                between("age", 18, 60)
-            }
+        users = User.createCriteria().list(max: 10, offset: 10) {
+            ilike("firstName", "Test%")
+            le("age", 30)
+            between("age", 18, 60)
         }
         render "Result -> ${users.size()} ${users*.id} totalCount ${users.totalCount}"
     }
@@ -37,11 +35,21 @@ class UtilController {
         render "Result ->${users.size()} ${users*.id}"
     }
 
+    def get = {
+        User user = User.createCriteria().get {
+            eq("id", 1L)
+        }
+        render user
+    }
+
     def count = {
+        List list = [10, 25, 30]
         Integer userCount = User.createCriteria().count() {
-            ilike("firstName", "Test 1%")
-            le("age", 50)
-            between("age", 18, 60)
+            ilike("firstName", "Test%")
+            le("age", 30)
+            if (list) {
+                inList("age", list)
+            }
         }
         render "Result -> ${userCount}"
     }
@@ -49,13 +57,19 @@ class UtilController {
     def and = {
         List<Account> accounts = Account.createCriteria().list() {
             and {
-                between("balance", 5000, 10000)
                 'branch' {
                     eq("name", "London")
                 }
+                or {
+                    between("balance", 5000, 10000)
+                    'user' {
+                        ilike("firstName", "Test 2%")
+                    }
+
+                }
             }
         }
-        render "Result -> ${accounts*.balance} ${accounts*.branch*.name}"
+        render "Result -> ${accounts*.balance} ${accounts*.branch*.name} ${accounts*.user.firstName}"
     }
 
     def or = {
@@ -88,13 +102,15 @@ class UtilController {
             projections {
                 property("age", 'userage')
                 'account' {
-                    property("dateCreated")
+                    property("balance")
                 }
             }
             ilike("firstName", "Test%")
             le("age", 50)
             between("age", 18, 60)
-            order('userage', 'desc')
+            'account' {
+                order('balance', 'desc')
+            }
         }
         render "Result -> ${dates}"
     }
@@ -158,14 +174,14 @@ class UtilController {
 
     def executeQuery = {
         Integer age = 19
-        List usersInfo = User.executeQuery("select u.firstName, u.lastName from User as u where age >:age", [age: age])
+        List usersInfo = User.executeQuery("select u.firstName, u.lastName from User as u where u.age >:age", [age: age])
         render "User Info -: ${usersInfo}"
     }
 
     def executeUpdate = {
         User user = User.get(1)
         String firstName = user.firstName
-        User.executeUpdate("update User as u set u.firstName=:firstName where u.id=:id", [firstName: "Test User 59", id: 1.toLong()])
+        User.executeUpdate("update User as u set u.firstName=:firstName where u.id=:id", [firstName: "Uday", id: 1.toLong()])
 //        user.refresh()
         render "firstName before ${firstName} -: After updation ${user.firstName}"
 //        User.executeUpdate("delete User where id=:id", [id: 1.toLong()])
@@ -174,18 +190,10 @@ class UtilController {
 
 
     def namedQuery = {
-        Date date = new Date() + 20
-//        List<Account> accounts = Account.recentCustomers(date).list()
-        List<Account> accounts = Account.recentCustomers(date).list(max: 10, offset: 0)
-//        List<Account> accounts = Account.recentCustomers(date).findAllByBalanceGreaterThan(5000)
+        Date date = new Date()
+//        List<Account> accounts = Account.maxBalance(30000).list()
+//        List<Account> accounts = Account.maxBalance(30000).list(max: 10, offset: 0)
+        List<Account> accounts = Account.maxBalance(30000).findAllByBalanceLessThan(40000)
         render "Success -> ${accounts.balance}"
-        /*
-          Difference between
-
-          Account.get(2)
-          Account.recentCustomers(date).get(2)
-           */
-
-
     }
 }

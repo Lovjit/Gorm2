@@ -17,8 +17,8 @@ class Account {
     }
 
     static namedQueries = {
-       recentCustomers {Date date ->
-               gt 'dateCreated', date - 10
-       }
+        maxBalance { Integer balance ->
+            gt 'balance', balance
+        }
     }
 }
