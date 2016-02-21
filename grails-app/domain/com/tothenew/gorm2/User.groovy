@@ -1,5 +1,7 @@
 package com.tothenew.gorm2
 
+import com.tothenew.gorm2.vo.AccountInfoVO
+
 class User {
 
     String firstName
@@ -7,7 +9,21 @@ class User {
     String address
     Integer age
 
+    static transients = ['accountInfo']
     static hasMany = [accounts: Account]
+
+    AccountInfoVO getAccountInfo() {
+        List result = Account.createCriteria().get {
+            projections {
+                count('id')
+                sum('balance')
+                avg('balance')
+            }
+            eq('user', this)
+        }
+
+        new AccountInfoVO(totalAccounts: result[0], totalBalance: result[1], averageBalance: result[2])
+    }
 
     static List<User> findUsers(String q, Integer age) {
         List<User> users = User.createCriteria().list() {

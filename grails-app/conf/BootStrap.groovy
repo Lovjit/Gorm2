@@ -43,9 +43,10 @@ class BootStrap {
             User.list().eachWithIndex { User user, index ->
                 Branch branch = Branch.get(user.id)
                 Date date = (new Date() - index)
-                Account account = new Account(balance: 1000 * (user.id), user: user, dateCreated: date, branch: branch)
-//                account.dateCreated = date
-                saveObject(account)
+                3.times {
+                    Account account = new Account(balance: 1000 * (user.id) * it, user: user, dateCreated: date, branch: branch)
+                    saveObject(account)
+                }
             }
         }
     }

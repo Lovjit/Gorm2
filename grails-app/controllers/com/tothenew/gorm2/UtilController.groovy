@@ -1,5 +1,7 @@
 package com.tothenew.gorm2
 
+import com.tothenew.gorm2.vo.AccountInfoVO
+
 class UtilController {
 
     static defaultAction = "list"
@@ -134,16 +136,10 @@ class UtilController {
         render "Result -> ${ageSum}"
     }
 
-    def rowCount() {
-        Integer userCount = User.createCriteria().get() {
-            projections {
-                rowCount()
-            }
-            ilike("firstName", "Test%")
-            le("age", 50)
-            between("age", 18, 60)
-        }
-        render "Result -> ${userCount}"
+    def projectProperties() {
+        User user = User.first()
+        AccountInfoVO accountInfoVO = user.accountInfo
+        render "${accountInfoVO}"
     }
 
     def groupProperty() {
