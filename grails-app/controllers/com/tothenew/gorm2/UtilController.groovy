@@ -5,17 +5,12 @@ class UtilController {
     static defaultAction = "list"
 
     def list() {
-        List<User> users = User.createCriteria().list() {
-            ilike("firstName", "Test%")
-            le("age", 30)
-            between("age", 18, 60)
-        }
+        List<User> users = User.findUsers("Test", 30)
         render "Result -> ${users.size()} ${users.firstName} ${users.age}"
     }
 
     def listPaginate() {
-        List<User> users
-        users = User.createCriteria().list(max: 10, offset: 10) {
+        List<User> users = User.createCriteria().list(max: 10, offset: 10) {
             ilike("firstName", "Test%")
             le("age", 30)
             between("age", 18, 60)

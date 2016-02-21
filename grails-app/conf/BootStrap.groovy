@@ -31,7 +31,8 @@ class BootStrap {
         if (!User.count()) {
             User user
             (1..50).each {
-                user = new User(firstName: "Test ${it}", address: "Address user ${it}", lastName: "last name${it}", age: it < 18 ? (it + 18) : ((it > 50) ? (it - 32) : it))
+                user = new User(firstName: "Test ${it}", address: "Address user ${it + 1}", lastName: "last name${it}",
+                        age: it < 18 ? (it + 18) : ((it > 50) ? (it - 32) : it))
                 saveObject(user)
             }
         }

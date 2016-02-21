@@ -3,6 +3,9 @@ dataSource {
     driverClassName = "com.mysql.jdbc.Driver"
     dialect = org.hibernate.dialect.MySQL5InnoDBDialect
     loggingSql = true
+    username = "root"
+    password = "igdefault"
+    dbCreate = "update"
 }
 hibernate {
     cache.use_second_level_cache = true
@@ -14,16 +17,12 @@ environments {
 
     test {
         dataSource {
-            dbCreate = "update"
-            url = "jdbc:h2:mem:testDb;MVCC=TRUE"
+            url = "jdbc:mysql://localhost:3306/gorm2_test"
         }
     }
 
     development {
         dataSource {
-            username = "root"
-            password = "igdefault"
-            dbCreate = "update" // one of 'create', 'create-drop', 'update', 'validate', ''
             url = "jdbc:mysql://localhost:3306/gorm2"
         }
     }
