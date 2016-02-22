@@ -1,5 +1,7 @@
 package com.tothenew.gorm2
 
+import com.tothenew.gorm2.co.AccountSearchCO
+
 class Account {
 
     Integer balance = 0
@@ -16,8 +18,13 @@ class Account {
     }
 
     static namedQueries = {
-        maxBalance { Integer balance ->
-            gt 'balance', balance
+        search { AccountSearchCO co ->
+            if (co.branch) {
+                eq('branch', co.branch)
+            }
+            if (co.balance) {
+                ge('balance', co.balance)
+            }
         }
     }
 }

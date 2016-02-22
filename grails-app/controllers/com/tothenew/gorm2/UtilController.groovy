@@ -1,5 +1,7 @@
 package com.tothenew.gorm2
 
+import com.tothenew.gorm2.co.AccountSearchCO
+import com.tothenew.gorm2.co.UserSearchCO
 import com.tothenew.gorm2.vo.AccountInfoVO
 
 class UtilController {
@@ -11,11 +13,12 @@ class UtilController {
         render "Result -> ${users.size()} ${users.firstName} ${users.age}"
     }
 
-    def listPaginate() {
-        List<User> users = User.createCriteria().list(max: 10, offset: 10) {
-            ilike("firstName", "Test%")
-            le("age", 30)
-            between("age", 18, 60)
+    def listPaginate(UserSearchCO co) {
+        List<User> users = User.createCriteria().list(max: co.max, offset: co.offset, order: co.order, sort: co.sort) {
+            ilike("firstName", "%${co.q}%")
+            if (co.age) {
+                le("age", co.age)
+            }
         }
         render "Result -> ${users.size()} ${users*.id} totalCount ${users.totalCount}"
     }
@@ -180,11 +183,12 @@ class UtilController {
     }
 
 
-    def namedQuery = {
-        Date date = new Date()
-//        List<Account> accounts = Account.maxBalance(30000).list()
-//        List<Account> accounts = Account.maxBalance(30000).list(max: 10, offset: 0)
-        List<Account> accounts = Account.maxBalance(30000).findAllByBalanceLessThan(40000)
-        render "Success -> ${accounts.balance}"
+    def namedQuery(AccountSearchCO co) {
+        List<Account> accounts = Account.search(co).list()
+//        List<Account> accounts = Account.search(co).list(max:co.max,order:co.order,sort:co.sort,offset:co.offset)
+//        Date date = new Date()
+//        List<Account> accounts = Account.search(co).findAllByDateCreatedLessThan(date - 1, [max: co.max, order: co.order, sort: co.sort, offset: co.offset])
+//        render "Success -> ${accounts.balance} -> ${Account.search(co).countByDateCreatedLessThan(date - 1)}"
+        render "Success -> ${accounts.branch} -> ${Account.search(co).count()}"
     }
 }
