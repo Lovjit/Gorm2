@@ -15,11 +15,12 @@ class User {
     AccountInfoVO getAccountInfo() {
         List result = Account.createCriteria().get {
             projections {
-                count('id')
+                count('id', 'accountCount')
                 sum('balance')
                 avg('balance')
             }
             eq('user', this)
+            order('accountCount', 'desc')
         }
 
         new AccountInfoVO(totalAccounts: result[0], totalBalance: result[1], averageBalance: result[2])

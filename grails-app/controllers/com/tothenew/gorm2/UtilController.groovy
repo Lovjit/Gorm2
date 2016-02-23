@@ -8,19 +8,21 @@ class UtilController {
 
     static defaultAction = "list"
 
-    def list() {
-        List<User> users = User.findUsers("Test", 30)
+    def list(String q, Integer age) {
+        List<User> users = User.findUsers(q, age)
         render "Result -> ${users.size()} ${users.firstName} ${users.age}"
     }
 
     def listPaginate(UserSearchCO co) {
-        List<User> users = User.createCriteria().list(max: co.max, offset: co.offset, order: co.order, sort: co.sort) {
-            ilike("firstName", "%${co.q}%")
+        List<User> users = User.createCriteria().list(max: co.max ?: 10, offset: co.offset, order: co.order, sort: co.sort) {
+            if (co.q) {
+                ilike("firstName", "%${co.q}%")
+            }
             if (co.age) {
                 le("age", co.age)
             }
         }
-        render "Result -> ${users.size()} ${users*.id} totalCount ${users.totalCount}"
+        render "Result -> ${users.size()} ${users*.firstName} totalCount ${users.totalCount}"
     }
 
     def listDistinct() {
@@ -33,6 +35,29 @@ class UtilController {
             order("age", "desc")
         }
         render "Result ->${users.size()} ${users*.id}"
+    }
+
+    def nested() {
+        List<Account> accounts = Account.createCriteria().list() {
+            if (params.q) {
+                'user' {
+                    ilike("firstName", "%${params.q}%")
+
+                }
+            }
+            le("balance", 10000)
+            if (params.age) {
+                'user' {
+                    ge("age", params.age)
+                }
+            }
+            maxResults 10
+            firstResult 0
+            'user' {
+                order(params.sort ?: 'age', "desc")
+            }
+        }
+        render "Result ->${accounts.size()} ${accounts.user.firstName}  ${accounts.user.age}"
     }
 
     def get() {
@@ -98,21 +123,17 @@ class UtilController {
     }
 
     def property() {
-        def dates = User.createCriteria().list() {
+        def result = User.createCriteria().list {
             projections {
                 property("age", 'userage')
-                'account' {
-                    property("balance")
-                }
+
             }
             ilike("firstName", "Test%")
             le("age", 50)
             between("age", 18, 60)
-            'account' {
-                order('balance', 'desc')
-            }
+
         }
-        render "Result -> ${dates}"
+        render "Result -> ${result}"
     }
 
     def distinct() {
@@ -158,37 +179,40 @@ class UtilController {
     def alias() {
         List result = Account.createCriteria().list() {
             projections {
-                groupProperty("branch")
+                createAlias("branch", "b")
+                groupProperty("b.id")
+                property("b.name")
                 sum("balance", 'totalBalance')
             }
             order("totalBalance", "desc")
+            order("b.name", "desc")
         }
         render "Result -> ${result}"
     }
 
     def executeQuery() {
         Integer age = 19
-        List usersInfo = User.executeQuery("select u.firstName, u.lastName from User as u where u.age >:age", [age: age])
+        List usersInfo = User.executeQuery("select u.firstName, u.lastName from User as u where u.age >:test", [test: age])
         render "User Info -: ${usersInfo}"
     }
 
     def executeUpdate() {
         User user = User.get(1)
         String firstName = user.firstName
-        User.executeUpdate("update User as u set u.firstName=:firstName where u.id=:id", [firstName: "Uday", id: 1.toLong()])
+        User.executeUpdate("update User as u set u.firstName=:firstName where u.id=:id", [firstName: "Test", id: 1.toLong()])
 //        user.refresh()
         render "firstName before ${firstName} -: After updation ${user.firstName}"
-//        User.executeUpdate("delete User where id=:id", [id: 1.toLong()])
+        User.executeUpdate("delete User where id=:id", [id: 1.toLong()])
 //        render "Success"
     }
 
 
     def namedQuery(AccountSearchCO co) {
-        List<Account> accounts = Account.search(co).list()
+//        List<Account> accounts = Account.search(co).list()
 //        List<Account> accounts = Account.search(co).list(max:co.max,order:co.order,sort:co.sort,offset:co.offset)
-//        Date date = new Date()
-//        List<Account> accounts = Account.search(co).findAllByDateCreatedLessThan(date - 1, [max: co.max, order: co.order, sort: co.sort, offset: co.offset])
-//        render "Success -> ${accounts.balance} -> ${Account.search(co).countByDateCreatedLessThan(date - 1)}"
-        render "Success -> ${accounts.branch} -> ${Account.search(co).count()}"
+        Date date = new Date()
+        List<Account> accounts = Account.search(co).findAllByDateCreatedLessThan(date - 1, [max: co.max, order: co.order, sort: co.sort, offset: co.offset])
+        render "Success -> ${accounts.balance} -> ${Account.search(co).countByDateCreatedLessThan(date - 1)}"
+//        render "Success -> ${accounts.branch} -> ${Account.search(co).count()}"
     }
 }
